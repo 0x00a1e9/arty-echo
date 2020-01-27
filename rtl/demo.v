@@ -44,6 +44,7 @@ module DEMO
     output wire UART_TX    // D10
 );
 
+// UART_TX_CTRL
 reg  [ 2:0] demo_state;
 reg  [ 7:0] data_arr [ 7:0];
 reg  [ 3:0] str_idx;
@@ -54,6 +55,13 @@ reg  [ 7:0] send_data;
 wire        ready;
 
 assign send = send_char;
+
+// UART_RX_CTRL
+wire        UART_RX;
+wire [ 7:0] recv_data;
+wire        vald_data;
+
+assign UART_RX = UART_TX;
 
 initial begin : asynchronous_reset
     demo_state  <= WAIT_BTN;
@@ -77,6 +85,13 @@ UART_TX_CTRL uart_tx_ctrl (
     send_data,
     ready,
     UART_TX
+);
+
+UART_RX_CTRL uart_rx_ctrl (
+    CLK,
+    UART_RX,
+    recv_data,
+    vald_data
 );
 
 always @(posedge CLK) begin : state_transition
