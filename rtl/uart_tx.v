@@ -3,8 +3,8 @@ module UART_TX_CTRL
     parameter [ 1:0] RDY       = 2'b01,
     parameter [ 1:0] LOAD      = 2'b10,
     parameter [ 1:0] SEND      = 2'b11,
-    parameter        INDEX_MAX = 0,
-    parameter [13:0] TIMER_MAX = 14'b10100010110000 // 10416 = round(100MHz/9600Hz) - 1
+    parameter [ 4:0] IDX_MAX   = 10,
+    parameter [13:0] TMR_MAX   = 14'b10100010110000 // 10416 = round(100MHz/9600Hz) - 1
 )
 (
     input  wire       CLK,
@@ -14,29 +14,32 @@ module UART_TX_CTRL
     output wire       UART_TX
 );
 
-reg         tx_bit    = 1'b1;
-reg  [ 1:0] tx_state  = RDY;
-reg  [10:0] tx_data;
-reg         index     = 0;
-reg  [13:0] tx_tmr    = 14'b00000000000000;
-wire        load_done;
+reg         tx_bit;
+reg  [ 1:0] tx_state;
+reg  [ 9:0] tx_data;
+reg  [ 3:0] index;
+reg  [13:0] tx_tmr;
+wire        send_done;
+
+initial begin
+    tx_bit   = 1'b1;
+    tx_state = RDY;
+    tx_tmr   = 14'b00000000000000;
+end
 
 always @(posedge CLK) begin : state_transition
     case (tx_state)
         RDY:
-            if (send) begin
+            if (send)
                 tx_state <= LOAD;
-            end
         LOAD:
             tx_state <= SEND;
         SEND:
-            if (load_done) begin
-                if (index == INDEX_MAX) begin
+            if (send_done) begin
+                if (index == IDX_MAX)
                     tx_state <= RDY;
-                end
-                else begin
+                else
                     tx_state <= LOAD;
-                end
             end
         default: // should never be reached
             tx_state <= RDY;
@@ -48,55 +51,34 @@ always @(posedge CLK) begin : timing
         tx_tmr <= 14'b00000000000000;
     end
     else begin
-        if (load_done) begin
+        if (send_done)
             tx_tmr <= 14'b00000000000000;
-        end
-        else begin
+        else
             tx_tmr <= tx_tmr + 1;
-        end
     end
 end
 
 always @(posedge CLK) begin : increment_index
-    if (tx_state == RDY) begin
+    if (tx_state == RDY)
         index <= 0;
-    end
-    else if (tx_state == LOAD) begin
+    else if (tx_state == LOAD)
         index <= index + 1;
-    end
 end
 
 always @(posedge CLK) begin : data_latch
-    if (send) begin
+    if (send)
         tx_data <= {1'b1, send_data, 1'b0};
-    end
 end
 
 always @(posedge CLK) begin : bit
-    if (tx_state == RDY) begin
+    if (tx_state == RDY)
         tx_bit <= 1'b1;
-    end
-    else if (tx_state == LOAD) begin
+    else if (tx_state == LOAD)
         tx_bit <= tx_data[index];
-    end
 end
 
-function set_load_done;
-input tmr;
-begin
-    set_load_done = (tmr == TIMER_MAX)? 1 : 0;
-end
-endfunction
-
-function set_ready;
-input state;
-begin
-    set_ready = (tx_state == RDY)? 1 : 0;
-end
-endfunction
-
-assign load_done = set_load_done(tx_tmr);
+assign send_done = (tx_tmr == TMR_MAX)? 1: 0;
 assign UART_TX   = tx_bit;
-assign ready     = set_ready(tx_state);
+assign ready     = (tx_state == RDY)? 1: 0;
 
 endmodule
