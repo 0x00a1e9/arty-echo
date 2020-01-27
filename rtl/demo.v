@@ -3,9 +3,9 @@
 
 module TESTBENCH;
 
-parameter CLK_PERIOD = 5;
+parameter CLK_PERIOD_h = 5;
 
-reg  CLK;
+reg  CLK = 1'b0;
 reg  btn_0;
 wire UART_TX;
 
@@ -19,18 +19,12 @@ initial begin
     $dumpfile("wave.vcd");
     $dumpvars(0, TESTBENCH);
 
-    CLK <= 0;
-    btn_0 <= 0;
+    CLK = 1'b0;
+    btn_0 = 1'b1;
+end
 
-    repeat (2) begin
-        #CLK_PERIOD CLK <= ~CLK;
-    end
-
-    #CLK_PERIOD btn_0 <= 1;
-
-    repeat (10000000) begin
-        #CLK_PERIOD CLK <= ~CLK;
-    end
+always #CLK_PERIOD_h begin
+    CLK = ~CLK;
 end
 
 endmodule

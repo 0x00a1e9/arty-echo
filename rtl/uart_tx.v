@@ -3,7 +3,7 @@ module UART_TX_CTRL
     parameter [ 1:0] RDY       = 2'b01,
     parameter [ 1:0] LOAD      = 2'b10,
     parameter [ 1:0] SEND      = 2'b11,
-    parameter [ 4:0] IDX_MAX   = 10,
+    parameter [ 3:0] IDX_MAX   = 10,
     parameter [13:0] TMR_MAX   = 14'b10100010110000 // 10416 = round(100MHz/9600Hz) - 1
 )
 (
@@ -70,7 +70,7 @@ always @(posedge CLK) begin : data_latch
         tx_data <= {1'b1, send_data, 1'b0};
 end
 
-always @(posedge CLK) begin : bit
+always @(posedge CLK) begin : bit0
     if (tx_state == RDY)
         tx_bit <= 1'b1;
     else if (tx_state == LOAD)
