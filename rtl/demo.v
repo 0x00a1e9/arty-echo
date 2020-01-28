@@ -36,7 +36,7 @@ module DEMO
     parameter [ 2:0] SEND_CHAR  = 3'b011,
     parameter [ 2:0] RDY        = 3'b100,
     parameter [ 2:0] WAIT_RDY   = 3'b101,
-    parameter [ 3:0] STR_LEN    = 4'b1000
+    parameter [ 3:0] STR_LEN    = 4'b1010
 )
 (
     input  wire CLK,       // E3
@@ -46,7 +46,7 @@ module DEMO
 
 // UART_TX_CTRL
 reg  [ 2:0] demo_state;
-reg  [ 7:0] data_arr [ 7:0];
+reg  [ 7:0] data_arr [ 9:0];
 reg  [ 3:0] str_idx;
 reg         send_char;
 
@@ -66,14 +66,16 @@ assign UART_RX = UART_TX;
 initial begin : asynchronous_reset
     demo_state  <= WAIT_BTN;
 
-    data_arr[0] <= 8'h41; // A
-    data_arr[1] <= 8'h52; // R
-    data_arr[2] <= 8'h54; // T
-    data_arr[3] <= 8'h59; // Y
-    data_arr[4] <= 8'h20; //  
-    data_arr[5] <= 8'h41; // A
-    data_arr[6] <= 8'h37; // 7
-    data_arr[7] <= 8'h0A; // \n
+    data_arr[0] <= 8'h01; // SOH
+    data_arr[1] <= 8'h02; // STX
+    data_arr[2] <= 8'h41; // A
+    data_arr[3] <= 8'h52; // R
+    data_arr[4] <= 8'h54; // T
+    data_arr[5] <= 8'h59; // Y 
+    data_arr[6] <= 8'h0D; // CR
+    data_arr[7] <= 8'h0A; // LF
+    data_arr[8] <= 8'h03; // ETX
+    data_arr[9] <= 8'h04; // EOT
 
     send_char   <= 1'b0;
     send_data   <= 0;
