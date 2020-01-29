@@ -19,7 +19,7 @@ reg  [ 1:0] tx_state;
 reg  [ 9:0] tx_data;
 reg  [ 3:0] index;
 reg  [13:0] tx_tmr;
-wire        send_done;
+wire        bit_done;
 
 initial begin
     tx_bit   = 1'b1;
@@ -35,7 +35,7 @@ always @(posedge CLK) begin : state_transition
         LOAD:
             tx_state <= SEND;
         SEND:
-            if (send_done) begin
+            if (bit_done) begin
                 if (index == IDX_MAX)
                     tx_state <= RDY;
                 else
@@ -48,11 +48,11 @@ end
 
 always @(posedge CLK) begin : timing
     if (tx_state == RDY) begin
-        tx_tmr <= 14'b00000000000000;
+        tx_tmr <= 14'd0;
     end
     else begin
-        if (send_done)
-            tx_tmr <= 14'b00000000000000;
+        if (bit_done)
+            tx_tmr <= 14'd0;
         else
             tx_tmr <= tx_tmr + 1;
     end
@@ -77,8 +77,8 @@ always @(posedge CLK) begin : bit0
         tx_bit <= tx_data[index];
 end
 
-assign send_done = (tx_tmr == TMR_MAX)? 1: 0;
+assign bit_done = (tx_tmr == TMR_MAX)? 1 : 0;
 assign UART_TX   = tx_bit;
-assign ready     = (tx_state == RDY)? 1: 0;
+assign ready     = (tx_state == RDY)? 1 : 0;
 
 endmodule
